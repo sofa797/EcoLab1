@@ -1,0 +1,659 @@
+{
+  "config_version": 1,
+  "appType": "Component",
+  "options": {
+    "postfixNamespace": true,
+    "connectionPoints": false,
+    "aggregationInner": false,
+    "aggregationOuter": false,
+    "containmentOuter": false,
+    "unitTest": true,
+    "threadSafe": false
+  },
+  "pathType": "Environment",
+  "infrastructureRequirements": {
+    "toolRegistry": [
+      {
+        "packageId": "eco-gnu-make",
+        "type": "make",
+        "version": "4.4.1",
+        "productId": "e5f446e4-2c15-4fbe-82c0-485fdaa0511e",
+        "manufacturer": "GNU Project",
+        "hosts": [
+          {
+            "platform": "Windows",
+            "architecture": {
+              "canonical": "x86_32",
+              "aliases": [
+                "x86",
+                "x86-32"
+              ]
+            },
+            "fileId": "0e8a63df2196",
+            "url": "https://ecoos.dev/product/e5f446e4-2c15-4fbe-82c0-485fdaa0511e",
+            "fileType": "zip",
+            "sha256": ""
+          },
+          {
+            "platform": "Windows",
+            "architecture": {
+              "canonical": "x86_64",
+              "aliases": [
+                "x64",
+                "x86-64"
+              ]
+            },
+            "fileId": "593366b1c471",
+            "url": "https://ecoos.dev/product/e5f446e4-2c15-4fbe-82c0-485fdaa0511e",
+            "fileType": "zip",
+            "sha256": ""
+          },
+          {
+            "platform": "Linux",
+            "architecture": {
+              "canonical": "x86_64",
+              "aliases": [
+                "x64",
+                "amd64",
+                "x86-64"
+              ]
+            },
+            "fileId": "91de472519ef",
+            "url": "https://ecoos.dev/product/e5f446e4-2c15-4fbe-82c0-485fdaa0511e",
+            "fileType": "zip",
+            "sha256": ""
+          }
+        ]
+      },
+      {
+        "packageId": "eco-x86_64-linux-gnu-gcc",
+        "type": "gcc",
+        "version": "13.2.0",
+        "productId": "39994d7a-c497-4fa8-a1ba-f79d2ab31cd9",
+        "manufacturer": "GNU Project",
+        "hosts": [
+          {
+            "platform": "Linux",
+            "architecture": {
+              "canonical": "x86_64",
+              "aliases": [
+                "x64",
+                "amd64"
+              ]
+            },
+            "fileId": "f5afeca1d717",
+            "url": "https://ecoos.dev/product/39994d7a-c497-4fa8-a1ba-f79d2ab31cd9",
+            "fileType": "zip",
+            "sha256": ""
+          },
+          {
+            "platform": "Linux",
+            "architecture": {
+              "canonical": "x86_64",
+              "aliases": [
+                "x64",
+                "amd64"
+              ]
+            },
+            "fileId": "9f7bc90082ae",
+            "url": "https://ecoos.dev/product/39994d7a-c497-4fa8-a1ba-f79d2ab31cd9",
+            "fileType": "zip",
+            "sha256": ""
+          }
+        ]
+      },
+      {
+        "packageId": "eco-aarch64-linux-gnu-gcc",
+        "type": "gcc",
+        "version": "13.2.0",
+        "productId": "714b80c3-73e2-4f9a-b2d0-2bdf5000bb87",
+        "manufacturer": "GNU Project",
+        "hosts": [
+          {
+            "platform": "Linux",
+            "architecture": {
+              "canonical": "aarch64",
+              "aliases": [
+                "arm64"
+              ]
+            },
+            "fileId": "fbb03485d859",
+            "url": "https://ecoos.dev/product/39994d7a-c497-4fa8-a1ba-f79d2ab31cd9",
+            "fileType": "zip",
+            "sha256": ""
+          },
+          {
+            "platform": "Linux",
+            "architecture": {
+              "canonical": "aarch64",
+              "aliases": [
+                "arm64"
+              ]
+            },
+            "fileId": "2ff959966cff",
+            "url": "https://ecoos.dev/product/39994d7a-c497-4fa8-a1ba-f79d2ab31cd9",
+            "fileType": "zip",
+            "sha256": ""
+          }
+        ]
+      },
+      {
+        "packageId": "android-ndk",
+        "type": "NDK",
+        "version": "15.3.0",
+        "productId": "",
+        "manufacturer": "Google LLC",
+        "hosts": [
+          {
+            "platform": "Linux",
+            "fileId": "",
+            "url": "https://dl.google.com/android/repository/android-ndk-r15c-linux-x86_64.zip",
+            "fileType": "zip",
+            "sha256": "0bf02d4e8b85fd770fd7b9b2cdec57f9441f27a2"
+          },
+          {
+            "platform": "Mac",
+            "fileId": "",
+            "url": "https://dl.google.com/android/repository/android-ndk-r15c-darwin-x86_64.zip",
+            "fileType": "zip",
+            "sha256": "ea4b5d76475db84745aa8828000d009625fc1f98"
+          },
+          {
+            "platform": "Windows",
+            "architecture": {
+              "canonical": "x86_32",
+              "aliases": [
+                "x86"
+              ]
+            },
+            "fileId": "",
+            "url": "https://dl.google.com/android/repository/android-ndk-r15c-windows-x86.zip",
+            "fileType": "zip",
+            "sha256": "f2e47121feb73ec34ced5e947cbf1adc6b56246e"
+          },
+          {
+            "platform": "Windows",
+            "architecture": {
+              "canonical": "x86_64",
+              "aliases": [
+                "x64",
+                "amd64"
+              ]
+            },
+            "fileId": "",
+            "url": "https://dl.google.com/android/repository/android-ndk-r15c-windows-x86_64.zip",
+            "fileType": "zip",
+            "sha256": "970bb2496de0eada74674bb1b06d79165f7256"
+          }
+        ]
+      },
+      {
+        "packageId": "eco-gcc-arm-none-eabi",
+        "type": "gcc",
+        "version": "13.2.0",
+        "productId": "",
+        "manufacturer": "GNU Project",
+        "hosts": []
+      },
+      {
+        "packageId": "eco-gcc-aarch64-none-elf",
+        "type": "gcc",
+        "version": "13.2.0",
+        "productId": "",
+        "manufacturer": "GNU Project",
+        "hosts": []
+      },
+      {
+        "packageId": "eco-gcc-riscv32-unknown-elf",
+        "type": "gcc",
+        "version": "13.2.0",
+        "productId": "",
+        "manufacturer": "GNU Project",
+        "hosts": []
+      },
+      {
+        "packageId": "eco-gcc-riscv64-unknown-elf",
+        "type": "gcc",
+        "version": "13.2.0",
+        "productId": "",
+        "manufacturer": "GNU Project",
+        "hosts": []
+      },
+      {
+        "packageId": "msvc-14",
+        "type": "MSVC",
+        "version": "14.00",
+        "productId": "",
+        "manufacturer": "Microsoft Corporation",
+        "hosts": []
+      },
+      {
+        "packageId": "vs-2022",
+        "type": "VS",
+        "version": "17.0",
+        "productId": "",
+        "manufacturer": "Microsoft Corporation",
+        "hosts": []
+      },
+      {
+        "packageId": "xcode-12",
+        "type": "Xcode",
+        "version": "12.3",
+        "productId": "",
+        "manufacturer": "Apple Inc.",
+        "hosts": []
+      }
+    ],
+    "targets": [
+      {
+        "platform": "EcoOS",
+        "architecture": {
+          "canonical": "arm",
+          "aliases": [
+            "cortex-m",
+            "arm32",
+            "armv7-m"
+          ]
+        },
+        "toolchain": {
+          "packageId": "eco-gcc-arm-none-eabi",
+          "type": "gcc",
+          "requiredVersion": "13.2.0",
+          "binaryPrefix": "arm-none-eabi-gcc"
+        },
+        "tools": [
+          "eco-gnu-make",
+          "eco-openocd-0.12"
+        ],
+        "assemblyPath": "{projectRoot}/AssemblyFiles/EcoOS/gcc_v132",
+        "template": {
+          "family": "ecogcc",
+          "makeArch": "aarch32",
+          "complete": true
+        }
+      },
+      {
+        "platform": "EcoOS",
+        "architecture": {
+          "canonical": "aarch64",
+          "aliases": [
+            "arm64",
+            "aarch64-none-elf",
+            "armv8-r"
+          ]
+        },
+        "toolchain": {
+          "packageId": "eco-gcc-aarch64-none-elf",
+          "type": "gcc",
+          "requiredVersion": "13.2.0",
+          "binaryPrefix": "aarch64-none-elf-gcc"
+        },
+        "tools": [
+          "eco-gnu-make"
+        ],
+        "assemblyPath": "{projectRoot}/AssemblyFiles/EcoOS/gcc_v132",
+        "template": {
+          "family": "ecogcc",
+          "makeArch": "aarch64",
+          "complete": true
+        }
+      },
+      {
+        "platform": "EcoOS",
+        "architecture": {
+          "canonical": "rv32",
+          "aliases": [
+            "riscv32",
+            "rv32imc",
+            "riscv-32"
+          ]
+        },
+        "toolchain": {
+          "packageId": "eco-gcc-riscv32-unknown-elf",
+          "type": "gcc",
+          "requiredVersion": "13.2.0",
+          "binaryPrefix": "riscv32-unknown-elf-gcc"
+        },
+        "tools": [
+          "eco-gnu-make",
+          "eco-openocd-0.13"
+        ],
+        "assemblyPath": "{projectRoot}/AssemblyFiles/EcoOS/gcc_v132",
+        "template": {
+          "family": "ecogcc",
+          "makeArch": "rv32",
+          "complete": true
+        }
+      },
+      {
+        "platform": "EcoOS",
+        "architecture": {
+          "canonical": "x86_64",
+          "aliases": [
+            "x64",
+            "amd64"
+          ]
+        },
+        "toolchain": {
+          "packageId": "eco-gcc-aarch64-none-elf",
+          "type": "gcc",
+          "requiredVersion": "13.2.0",
+          "binaryPrefix": "gcc"
+        },
+        "tools": [
+          "eco-gnu-make"
+        ],
+        "assemblyPath": "{projectRoot}/AssemblyFiles/EcoOS/gcc_v132",
+        "template": {
+          "family": "ecogcc",
+          "makeArch": "x86_64",
+          "complete": true
+        }
+      },
+      {
+        "platform": "EcoOS",
+        "architecture": {
+          "canonical": "rv64",
+          "aliases": [
+            "riscv64"
+          ]
+        },
+        "toolchain": {
+          "packageId": "eco-gcc-riscv64-unknown-elf",
+          "type": "gcc",
+          "requiredVersion": "13.2.0",
+          "binaryPrefix": "riscv64-unknown-elf-gcc"
+        },
+        "tools": [
+          "eco-gnu-make"
+        ],
+        "assemblyPath": "{projectRoot}/AssemblyFiles/EcoOS/gcc_v132",
+        "template": {
+          "family": "ecogcc",
+          "makeArch": "rv64",
+          "complete": true
+        }
+      },
+      {
+        "platform": "Windows",
+        "architecture": {
+          "canonical": "x86_64",
+          "aliases": [
+            "amd64",
+            "x64",
+            "win64"
+          ]
+        },
+        "toolchain": {
+          "packageId": "msvc-14",
+          "type": "MSVC",
+          "requiredVersion": "14.00",
+          "binaryPrefix": "cl.exe"
+        },
+        "tools": [
+          "eco-gnu-make"
+        ],
+        "assemblyPath": "{projectRoot}/AssemblyFiles/Windows/MSVC_v140",
+        "template": {
+          "family": "winmsvc",
+          "makeArch": "x86_64",
+          "complete": true
+        }
+      },
+      {
+        "platform": "Windows",
+        "architecture": {
+          "canonical": "x86_32",
+          "aliases": [
+            "x86",
+            "i386"
+          ]
+        },
+        "toolchain": {
+          "packageId": "msvc-14",
+          "type": "MSVC",
+          "requiredVersion": "14.00",
+          "binaryPrefix": "cl.exe"
+        },
+        "tools": [
+          "eco-gnu-make"
+        ],
+        "assemblyPath": "{projectRoot}/AssemblyFiles/Windows/MSVC_v140",
+        "template": {
+          "family": "winmsvc",
+          "makeArch": "x86_32",
+          "complete": true
+        }
+      },
+      {
+        "platform": "Windows",
+        "architecture": {
+          "canonical": "x86_64",
+          "aliases": [
+            "amd64",
+            "x64"
+          ]
+        },
+        "toolchain": {
+          "packageId": "vs-2022",
+          "type": "VS",
+          "requiredVersion": "17.0",
+          "binaryPrefix": "msbuild.exe"
+        },
+        "tools": [
+          "eco-gnu-make"
+        ],
+        "assemblyPath": "{projectRoot}/AssemblyFiles/Windows/VS_2022",
+        "template": {
+          "family": "vs",
+          "complete": false
+        }
+      },
+      {
+        "platform": "Windows",
+        "architecture": {
+          "canonical": "x86_64",
+          "aliases": [
+            "x64",
+            "amd64"
+          ]
+        },
+        "toolchain": {
+          "packageId": "eco-x86_64-linux-gnu-gcc",
+          "type": "gcc",
+          "requiredVersion": "13.2.0",
+          "binaryPrefix": "x86_64-w64-mingw32-gcc"
+        },
+        "tools": [
+          "eco-gnu-make"
+        ],
+        "assemblyPath": "{projectRoot}/AssemblyFiles/Windows/gcc_v132",
+        "template": {
+          "family": "wingcc",
+          "makeArch": "x86_64",
+          "complete": true
+        }
+      },
+      {
+        "platform": "Windows",
+        "architecture": {
+          "canonical": "x86_32",
+          "aliases": [
+            "x86",
+            "i386"
+          ]
+        },
+        "toolchain": {
+          "packageId": "eco-x86_64-linux-gnu-gcc",
+          "type": "gcc",
+          "requiredVersion": "13.2.0",
+          "binaryPrefix": "i686-w64-mingw32-gcc"
+        },
+        "tools": [
+          "eco-gnu-make"
+        ],
+        "assemblyPath": "{projectRoot}/AssemblyFiles/Windows/gcc_v132",
+        "template": {
+          "family": "wingcc",
+          "makeArch": "x86_32",
+          "complete": true
+        }
+      },
+      {
+        "platform": "Linux",
+        "architecture": {
+          "canonical": "x86_64",
+          "aliases": [
+            "x64",
+            "amd64"
+          ]
+        },
+        "toolchain": {
+          "packageId": "eco-x86_64-linux-gnu-gcc",
+          "type": "gcc",
+          "requiredVersion": "13.2.0",
+          "binaryPrefix": "x86_64-linux-gnu-gcc"
+        },
+        "tools": [
+          "eco-gnu-make"
+        ],
+        "assemblyPath": "{projectRoot}/AssemblyFiles/Linux/gcc_v132",
+        "template": {
+          "family": "nixgcc",
+          "makeArch": "x86_64",
+          "complete": true
+        }
+      },
+      {
+        "platform": "Linux",
+        "architecture": {
+          "canonical": "aarch64",
+          "aliases": [
+            "arm64"
+          ]
+        },
+        "toolchain": {
+          "packageId": "eco-gcc-aarch64-none-elf",
+          "type": "gcc",
+          "requiredVersion": "13.2.0",
+          "binaryPrefix": "aarch64-linux-gnu-gcc"
+        },
+        "tools": [
+          "eco-gnu-make"
+        ],
+        "assemblyPath": "{projectRoot}/AssemblyFiles/Linux/gcc_v132",
+        "template": {
+          "family": "nixgcc",
+          "makeArch": "aarch64",
+          "complete": true
+        }
+      },
+      {
+        "platform": "Linux",
+        "architecture": {
+          "canonical": "rv64",
+          "aliases": [
+            "riscv64"
+          ]
+        },
+        "toolchain": {
+          "packageId": "eco-gcc-riscv64-unknown-elf",
+          "type": "gcc",
+          "requiredVersion": "13.2.0",
+          "binaryPrefix": "riscv64-linux-gnu-gcc"
+        },
+        "tools": [
+          "eco-gnu-make"
+        ],
+        "assemblyPath": "{projectRoot}/AssemblyFiles/Linux/gcc_v132",
+        "template": {
+          "family": "nixgcc",
+          "makeArch": "rv64",
+          "complete": true
+        }
+      },
+      {
+        "platform": "Android",
+        "architecture": {
+          "canonical": "aarch64",
+          "aliases": [
+            "arm64-v8a",
+            "android-arm64"
+          ]
+        },
+        "toolchain": {
+          "packageId": "android-ndk",
+          "type": "NDK",
+          "requiredVersion": "15.3.0",
+          "binaryPrefix": ""
+        },
+        "tools": [
+          ""
+        ],
+        "assemblyPath": "{projectRoot}/AssemblyFiles/Android/NDK_r15",
+        "template": {
+          "family": "android",
+          "complete": false
+        }
+      },
+      {
+        "platform": "Mac",
+        "architecture": {
+          "canonical": "aarch64",
+          "aliases": [
+            "arm64",
+            "apple-m1",
+            "apple-silicon"
+          ]
+        },
+        "toolchain": {
+          "packageId": "xcode-12",
+          "type": "Xcode",
+          "requiredVersion": "12.3",
+          "binaryPrefix": "clang"
+        },
+        "tools": [
+          ""
+        ],
+        "assemblyPath": "{projectRoot}/AssemblyFiles/Mac/Xcode_v123",
+        "template": {
+          "family": "xcode",
+          "complete": false
+        }
+      },
+      {
+        "platform": "iOS",
+        "architecture": {
+          "canonical": "aarch64",
+          "aliases": [
+            "arm64",
+            "iphoneos"
+          ]
+        },
+        "toolchain": {
+          "packageId": "xcode-12",
+          "type": "Xcode",
+          "requiredVersion": "12.3",
+          "binaryPrefix": "clang"
+        },
+        "tools": [
+          ""
+        ],
+        "assemblyPath": "{projectRoot}/AssemblyFiles/iOS/Xcode_v123",
+        "template": {
+          "family": "xcode",
+          "complete": false
+        }
+      }
+    ]
+  },
+  "template_version": 3,
+  "language": "C",
+  "entry": "EcoLab1",
+  "author": "",
+  "company": "",
+  "registrations": [],
+  "design_docs": true,
+  "target": "linux/aarch64/gcc_v132",
+  "wizard_version": "0.2.2"
+}

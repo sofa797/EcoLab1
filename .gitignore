@@ -1,0 +1,27 @@
+*.o
+*.a
+*.dylib
+*.so
+*.exe
+*.dll
+*.lib
+*.obj
+
+BuildFiles/*/
+BuildFiles/*/*/
+!BuildFiles/.gitkeep
+
+*.xcuserdata
+*.xcodeproj/xcuserdata/
+*.xcodeproj/project.xcworkspace/xcuserdata/
+*.xcworkspace/xcuserdata/
+UserInterfaceState.xcuserstate
+
+.DS_Store
+._*
+
+*.swp
+*~
+*.tmp
+
+# DependenciesFiles/

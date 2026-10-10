@@ -1,0 +1,141 @@
+# Configurations
+
+# Platform detection
+PLATFORM = Windows
+
+ifeq ($(OS), Windows_NT)
+	#WINDOWS USE THESE DEFINITIONS
+#	RM = del /Q /F
+	RM = -rm -f
+#	SLASH = \\
+	SLASH = /
+	SWALLOW_OUTPUT = >nul 2>nul
+	TOOLCHAIN = $(subst \,/,$(ECO_TOOLCHAIN))
+    FRAMEWORK := $(subst \,/,$(ECO_FRAMEWORK))
+	TOOL = $(TOOLCHAIN)$(SLASH)eco-i686-win-dwarf-gcc-13.2.0-win-x86_64$(SLASH)bin$(SLASH)i686-w64-mingw32-
+else
+	#LINUX USE THESE DEFINITIONS
+	RM = -rm -f
+	SLASH = /
+	SWALLOW_OUTPUT =
+	TOOLCHAIN = 
+	TOOL = 
+endif 
+
+# Target configuration
+ifeq ($(TARGET), 1)
+	OUT_TARGET = EcoLab1
+	BASE_TARGET = Static
+    CCFLAGS_TARGET = -fms-extensions -DUGUID_UTILITY -DECO_WINDOWS -DECO_LIB
+    LDFLAGS_TARGET = -Wl,--enable-stdcall-fixup
+else
+	OUT_TARGET = EcoLab1
+	BASE_TARGET = Dynamic
+    CCFLAGS_TARGET = -fms-extensions -DUGUID_UTILITY -DECO_WINDOWS -DECO_DLL
+    LDFLAGS_TARGET = -Wl,--enable-stdcall-fixup
+endif
+
+# Debug symbols configuration
+ifeq ($(DEBUG), 1)
+	CONFIG_TARGET = $(BASE_TARGET)Debug
+    CCFLAGS_TARGET += -g -DDEBUG  
+    LDFLAGS_TARGET += 
+    ifeq ($(TARGET), 1)
+        CCFLAGS_TARGET += 
+    else
+        LDFLAGS_TARGET += 
+    endif
+else
+	CONFIG_TARGET = $(BASE_TARGET)Release
+    CCFLAGS_TARGET += -DNDEBUG 
+    LDFLAGS_TARGET +=
+    ifeq ($(TARGET), 1)
+        CCFLAGS_TARGET += 
+    endif
+endif
+
+
+ifeq ($(ARCH), x86_32)
+    ARCH_TARGET = x86
+    CCFLAGS_TARGET += -DECO_X86_32
+    LDFLAGS_TARGET += -Wl,--enable-stdcall-fixup -Wl,--add-stdcall-alias -Wl,--kill-at -Wl,--enable-auto-import
+    LDFLAGS_TARGET += -Wl,--defsym,__GetIEcoComponentFactoryPtr_00000000000000000000000042757331=_GetIEcoComponentFactoryPtr_00000000000000000000000042757331 -Wl,--defsym,__GetIEcoComponentFactoryPtr_0000000000000000000000004D656D31=_GetIEcoComponentFactoryPtr_0000000000000000000000004D656D31 -Wl,--defsym,__GetIEcoComponentFactoryPtr_00000000000000000000000046534D31=_GetIEcoComponentFactoryPtr_00000000000000000000000046534D31
+    LIBS_TARGET = -l00000000000000000000000053595332
+else ifeq ($(ARCH), x86)
+    ARCH_TARGET = x86
+    CCFLAGS_TARGET += -DECO_X86_32
+    LDFLAGS_TARGET += -Wl,--enable-stdcall-fixup -Wl,--add-stdcall-alias -Wl,--kill-at -Wl,--enable-auto-import
+    LDFLAGS_TARGET += -Wl,--defsym,__GetIEcoComponentFactoryPtr_00000000000000000000000042757331=_GetIEcoComponentFactoryPtr_00000000000000000000000042757331 -Wl,--defsym,__GetIEcoComponentFactoryPtr_0000000000000000000000004D656D31=_GetIEcoComponentFactoryPtr_0000000000000000000000004D656D31 -Wl,--defsym,__GetIEcoComponentFactoryPtr_00000000000000000000000046534D31=_GetIEcoComponentFactoryPtr_00000000000000000000000046534D31
+    LIBS_TARGET = -l00000000000000000000000053595332
+else ifeq ($(ARCH), x86_64)
+    CCFLAGS_TARGET += -DECO_X86_64  
+    ARCH_TARGET = amd64
+    LIBS_TARGET = -l00000000000000000000000053595333
+else ifeq ($(ARCH), x64)
+    CCFLAGS_TARGET += -DECO_X86_64
+    ARCH_TARGET = amd64
+    LIBS_TARGET = -l00000000000000000000000053595333
+endif
+
+# Device selection
+ifdef DEVICE
+    DEVICE_TARGET = $(DEVICE)$(SLASH)
+endif
+
+# Include directories
+INC = -I "$(ECO_FRAMEWORK)$(SLASH)Eco.Core1$(SLASH)SharedFiles" \
+-I "$(ECO_FRAMEWORK)$(SLASH)Eco.InterfaceBus1$(SLASH)SharedFiles" \
+-I "$(ECO_FRAMEWORK)$(SLASH)Eco.MemoryManager1$(SLASH)SharedFiles" \
+-I "$(ECO_FRAMEWORK)$(SLASH)Eco.FileSystemManagement1$(SLASH)SharedFiles" \
+-I "$(ECO_FRAMEWORK)$(SLASH)Eco.System1$(SLASH)SharedFiles"\
+-I ..$(SLASH)..$(SLASH)..$(SLASH)HeaderFiles \
+-I ..$(SLASH)..$(SLASH)..$(SLASH)SharedFiles
+
+# Libraries directories
+LIB_DIR = -L "$(ECO_FRAMEWORK)$(SLASH)Eco.Core1$(SLASH)BuildFiles$(SLASH)$(PLATFORM)$(SLASH)$(ARCH_TARGET)$(SLASH)StaticRelease" \
+-L "$(ECO_FRAMEWORK)$(SLASH)Eco.InterfaceBus1$(SLASH)BuildFiles$(SLASH)$(PLATFORM)$(SLASH)$(ARCH_TARGET)$(SLASH)StaticRelease" \
+-L "$(ECO_FRAMEWORK)$(SLASH)Eco.MemoryManager1$(SLASH)BuildFiles$(SLASH)$(PLATFORM)$(SLASH)$(ARCH_TARGET)$(SLASH)StaticRelease" \
+-L "$(ECO_FRAMEWORK)$(SLASH)Eco.FileSystemManagement1$(SLASH)BuildFiles$(SLASH)$(PLATFORM)$(SLASH)$(ARCH_TARGET)$(SLASH)StaticRelease" \
+-L "$(ECO_FRAMEWORK)$(SLASH)Eco.System1$(SLASH)BuildFiles$(SLASH)$(PLATFORM)$(SLASH)$(ARCH_TARGET)$(SLASH)StaticRelease"\
+-L "..$(SLASH)..$(SLASH)..$(SLASH)BuildFiles$(SLASH)$(PLATFORM)$(SLASH)$(ARCH_TARGET)$(SLASH)$(CONFIG_TARGET)"
+
+# Source files.
+SRC = \
+..$(SLASH)..$(SLASH)..$(SLASH)UnitTestFiles$(SLASH)SourceFiles$(SLASH)EcoLab1.c
+
+# Libraries
+LIBS = -lm -lgcc -lmsvcrt
+LIBS += -l011BF193DAAC48E0B83B3A8618D23C4C -l00000000000000000000000042757331 -l0000000000000000000000004D656D31 -l00000000000000000000000046534D31 $(LIBS_TARGET) 
+
+# Object files
+OBJ = $(SRC:.c=.o)
+
+OUT = $(OUT_TARGET)
+OUT_DIR = ..$(SLASH)..$(SLASH)..$(SLASH)BuildFiles$(SLASH)$(PLATFORM)$(SLASH)$(ARCH_TARGET)$(SLASH)$(CONFIG_TARGET)
+
+# C/C++ compiler flags
+CCFLAGS = $(CCFLAGS_TARGET)  -DECO_FLOAT_T_DEFINED -DECO_DOUBLE_T_DEFINED
+ 
+ # Compile flags
+LDFLAGS = $(LDFLAGS_TARGET)
+
+# Tools
+CC = $(TOOL)gcc
+LD = $(TOOL)gcc
+AR = $(TOOL)gcc-ar
+OC = $(TOOL)objcopy
+
+.SUFFIXES: .c
+
+all:  $(OUT)
+
+.c.o:
+	mkdir -p "$(OUT_DIR)"
+	$(CC) $(INC) $(CCFLAGS) -c $< -o $@
+
+$(OUT): $(OBJ)
+	$(LD) $(OBJ) $(LIB_DIR) $(LDFLAGS) -Wl,--start-group $(LIBS) -Wl,--end-group -o "$(OUT_DIR)$(SLASH)$(OUT).exe"
+	$(RM) $(OBJ)
+    
+clean:
+	$(RM) $(OBJ) $(OUT_DIR)$(SLASH)$(OUT)

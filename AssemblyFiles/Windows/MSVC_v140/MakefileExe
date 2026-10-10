@@ -1,0 +1,139 @@
+# Configurations
+
+# Platform detection
+PLATFORM = Windows
+
+ifeq ($(OS), Windows_NT)
+	#WINDOWS USE THESE DEFINITIONS
+#	RM = del /Q /F
+	RM = -rm -f
+#	SLASH = \\
+	SLASH = /
+	SWALLOW_OUTPUT = >nul 2>nul
+	TOOLCHAIN = 
+	TOOL = 
+	MSSDK = $(MSSDK_ROOT)
+else
+	#LINUX USE THESE DEFINITIONS
+	RM = -rm -f
+	SLASH = /
+	SWALLOW_OUTPUT =
+	TOOLCHAIN = 
+	TOOL = 
+endif 
+
+# Target configuration
+ifeq ($(TARGET), 1)
+	OUT_TARGET = EcoLab1
+	BASE_TARGET = Static
+    CCFLAGS_TARGET = /Gz /TC /W4 /Zc:__cplusplus /D_CRT_SECURE_NO_WARNINGS
+    CCFLAGS_TARGET += /D__STDC_VERSION__=199901L /DUGUID_UTILITY /DECO_WINDOWS /DECO_LIB
+    LDFLAGS_TARGET = /NOLOGO /SUBSYSTEM:CONSOLE /INCREMENTAL:NO
+else
+	OUT_TARGET = EcoLab1
+	BASE_TARGET = Dynamic
+    CCFLAGS_TARGET = /Gz /TC /W4 /Zc:__cplusplus /D_CRT_SECURE_NO_WARNINGS
+    CCFLAGS_TARGET += /D__STDC_VERSION__=199901L /DUGUID_UTILITY /DECO_WINDOWS /DECO_DLL
+    LDFLAGS_TARGET = /NOLOGO /SUBSYSTEM:CONSOLE /INCREMENTAL:NO
+endif
+
+# Debug symbols configuration
+ifeq ($(DEBUG), 1)
+	CONFIG_TARGET = $(BASE_TARGET)Debug
+    CCFLAGS_TARGET += /Zi /Fd$(OUT_DIR)$(SLASH)$(OUT_TARGET:.exe=.pdb)
+    ifeq ($(TARGET), 1)
+        CCFLAGS_TARGET += /MTd
+    endif
+    LDFLAGS_TARGET += /DEBUG /PDB:$(OUT_DIR)$(SLASH)$(OUT_TARGET:.exe=.pdb)
+else
+	CONFIG_TARGET = $(BASE_TARGET)Release
+    CCFLAGS_TARGET += /Z7
+    ifeq ($(TARGET), 1)
+        CCFLAGS_TARGET += /MT
+    endif
+    LDFLAGS_TARGET += /DEBUG:NONE
+endif
+
+# Architecture selection
+ifeq ($(ARCH), x86_32)
+    CCFLAGS_TARGET += /DECO_X86_32
+    LDFLAGS_TARGET += /MACHINE:X86
+    ARCH_TARGET = x86
+    LIBS_TARGET = 00000000000000000000000053595332.lib
+else ifeq ($(ARCH), x86)
+    CCFLAGS_TARGET += /DECO_X86_32
+    LDFLAGS_TARGET += /MACHINE:X86
+    ARCH_TARGET = x86
+    LIBS_TARGET = 00000000000000000000000053595332.lib
+else ifeq ($(ARCH), x86_64)
+    CCFLAGS_TARGET += /DECO_X86_64  
+    LDFLAGS_TARGET += /MACHINE:X64
+    ARCH_TARGET = amd64
+    LIBS_TARGET = 00000000000000000000000053595333.lib    
+else ifeq ($(ARCH), x64)
+    CCFLAGS_TARGET += /DECO_X86_64  
+    LDFLAGS_TARGET += /MACHINE:X64
+    ARCH_TARGET = amd64
+    LIBS_TARGET = 00000000000000000000000053595333.lib    
+endif
+
+# Device selection
+ifdef DEVICE
+    DEVICE_TARGET = $(DEVICE)$(SLASH)
+endif
+
+# Include directories
+INC = /I "$(ECO_FRAMEWORK)$(SLASH)Eco.Core1$(SLASH)SharedFiles" \
+/I "$(ECO_FRAMEWORK)$(SLASH)Eco.InterfaceBus1$(SLASH)SharedFiles" \
+/I "$(ECO_FRAMEWORK)$(SLASH)Eco.MemoryManager1$(SLASH)SharedFiles" \
+/I "$(ECO_FRAMEWORK)$(SLASH)Eco.FileSystemManagement1$(SLASH)SharedFiles" \
+/I "$(ECO_FRAMEWORK)$(SLASH)Eco.System1$(SLASH)SharedFiles"\
+/I ..$(SLASH)..$(SLASH)..$(SLASH)HeaderFiles \
+/I ..$(SLASH)..$(SLASH)..$(SLASH)SharedFiles
+
+# Libraries directories
+LIB_DIR = /LIBPATH:"$(ECO_FRAMEWORK)$(SLASH)Eco.Core1$(SLASH)BuildFiles$(SLASH)$(PLATFORM)$(SLASH)$(ARCH_TARGET)$(SLASH)StaticRelease" \
+/LIBPATH:"$(ECO_FRAMEWORK)$(SLASH)Eco.InterfaceBus1$(SLASH)BuildFiles$(SLASH)$(PLATFORM)$(SLASH)$(ARCH_TARGET)$(SLASH)StaticRelease" \
+/LIBPATH:"$(ECO_FRAMEWORK)$(SLASH)Eco.MemoryManager1$(SLASH)BuildFiles$(SLASH)$(PLATFORM)$(SLASH)$(ARCH_TARGET)$(SLASH)StaticRelease" \
+/LIBPATH:"$(ECO_FRAMEWORK)$(SLASH)Eco.FileSystemManagement1$(SLASH)BuildFiles$(SLASH)$(PLATFORM)$(SLASH)$(ARCH_TARGET)$(SLASH)StaticRelease" \
+/LIBPATH:"$(ECO_FRAMEWORK)$(SLASH)Eco.System1$(SLASH)BuildFiles$(SLASH)$(PLATFORM)$(SLASH)$(ARCH_TARGET)$(SLASH)StaticRelease"\
+/LIBPATH:"..$(SLASH)..$(SLASH)..$(SLASH)BuildFiles$(SLASH)$(PLATFORM)$(SLASH)$(ARCH_TARGET)$(SLASH)$(CONFIG_TARGET)"
+
+# Source files.
+SRC = \
+..$(SLASH)..$(SLASH)..$(SLASH)UnitTestFiles$(SLASH)SourceFiles$(SLASH)EcoLab1.c
+
+# Libraries
+LIBS = "kernel32.lib" "user32.lib" "gdi32.lib" "winspool.lib" "comdlg32.lib" "advapi32.lib" "shell32.lib" "ole32.lib" "oleaut32.lib" "uuid.lib" "odbc32.lib" "odbccp32.lib"
+LIBS += "011BF193DAAC48E0B83B3A8618D23C4C.lib" "00000000000000000000000042757331.lib" "0000000000000000000000004D656D31.lib" "00000000000000000000000046534D31.lib" $(LIBS_TARGET) 
+
+# Object files
+OBJ = $(SRC:.c=.o)
+
+OUT = $(OUT_TARGET)
+OUT_DIR = ..$(SLASH)..$(SLASH)..$(SLASH)BuildFiles$(SLASH)$(PLATFORM)$(SLASH)$(ARCH_TARGET)$(SLASH)$(CONFIG_TARGET)
+
+# C/C++ compiler flags
+CCFLAGS = $(CCFLAGS_TARGET)
+ 
+ # Compile flags
+LDFLAGS = $(LDFLAGS_TARGET)
+
+# Tools
+CC = cl
+LD = cl
+AR = lib
+
+.SUFFIXES: .c
+
+all:  $(OUT)
+
+.c.o:
+	mkdir -p "$(subst /,\,$(OUT_DIR))"
+	$(CC) $(INC) $(CCFLAGS) /c $< /Fo$@
+
+$(OUT): $(OBJ)
+	$(LD) $(OBJ) /link $(LIB_DIR) $(LIBS) $(LDFLAGS_TARGET) $(LDFLAGS_CONFIG) /OUT:$(OUT_DIR)/$(OUT).exe
+    
+clean:
+	$(RM) $(OBJ) $(OUT_DIR)$(SLASH)$(OUT) $(OUT_DIR)$(SLASH)*.pdb $(OUT_DIR)$(SLASH)*.ilk

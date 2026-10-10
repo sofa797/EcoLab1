@@ -1,0 +1,214 @@
+# --- Host Platform Detection ---
+ifeq ($(OS), Windows_NT)
+    SHELL := cmd.exe
+    HOST_OS = win-x86_64
+    RM = -del /q /f
+    SLASH = /
+    FIX_PATH = $(subst /,\,$1)
+    FRAMEWORK := $(subst \,/,$(ECO_FRAMEWORK))
+    TOOLCHAIN := $(subst \,/,$(ECO_TOOLCHAIN))
+    # Python path for specific post-processing
+    PYTHON = python3
+else
+    HOST_OS = nix-x86_64
+    RM = rm -f
+    SLASH = /
+    FIX_PATH = $1
+    FRAMEWORK := $(ECO_FRAMEWORK)
+    TOOLCHAIN := $(ECO_TOOLCHAIN)
+    PYTHON = python3
+endif
+
+# --- Project Configuration ---
+TARGET ?= 1
+ARCH ?= rv64
+DEVICE ?= D1
+DEBUG ?= 0
+PLATFORM = EcoOS
+EXT = .elf
+
+# Target configuration
+ifeq ($(TARGET), 1)
+	OUT_TARGET = EcoLab1
+	BASE_TARGET = Static
+    CCFLAGS_TARGET = -fms-extensions -DUGUID_UTILITY -DECO_OS -DECO_LIB
+    LDFLAGS_TARGET = 
+else
+	OUT_TARGET = EcoLab1
+	BASE_TARGET = Dynamic
+    CCFLAGS_TARGET = -fms-extensions -DUGUID_UTILITY -DECO_OS -DECO_DLL
+    LDFLAGS_TARGET = 
+endif
+
+# Debug symbols configuration
+ifeq ($(DEBUG), 1)
+	CONFIG_TARGET = $(BASE_TARGET)Debug
+    CCFLAGS_TARGET += -g -DDEBUG  
+    LDFLAGS_TARGET += 
+    ifeq ($(TARGET), 1)
+        CCFLAGS_TARGET += 
+    else
+        LDFLAGS_TARGET += 
+    endif
+else
+	CONFIG_TARGET = $(BASE_TARGET)Release
+    CCFLAGS_TARGET += -DNDEBUG 
+    LDFLAGS_TARGET +=
+    ifeq ($(TARGET), 1)
+        CCFLAGS_TARGET += 
+    endif
+endif
+
+# --- Architecture & Toolchain Selection ---
+ifeq ($(ARCH), x86_16)
+    TOOL = $(TOOLCHAIN)$(SLASH)eco-i686-win-dwarf-gcc-13.2.0-$(HOST_OS)$(SLASH)bin$(SLASH)i686-w64-mingw32-
+    CCFLAGS_ARCH = -DECO_X86_16 -march=i8086 -m16
+    ARCH_TARGET = x86_16
+
+else ifeq ($(ARCH), x86_32)
+    TOOL = $(TOOLCHAIN)$(SLASH)eco-i686-win-dwarf-gcc-13.2.0-$(HOST_OS)$(SLASH)bin$(SLASH)i686-w64-mingw32-
+    CCFLAGS_ARCH = -DECO_X86_32 -march=pentium
+    LDFLAGS_ARCH = -Wl,--enable-stdcall-fixup -Wl,--add-stdcall-alias
+    ARCH_TARGET = x86
+
+else ifeq ($(ARCH), x86)
+    TOOL = $(TOOLCHAIN)$(SLASH)eco-i686-win-dwarf-gcc-13.2.0-$(HOST_OS)$(SLASH)bin$(SLASH)i686-w64-mingw32-
+    CCFLAGS_ARCH = -DECO_X86_32 -march=pentium
+    LDFLAGS_ARCH = -Wl,--enable-stdcall-fixup -Wl,--add-stdcall-alias
+    ARCH_TARGET = x86
+
+else ifeq ($(ARCH), x86_64)
+    TOOL = $(TOOLCHAIN)$(SLASH)eco-x86_64-w64-mingw32-gcc-13.2.0-$(HOST_OS)$(SLASH)bin$(SLASH)x86_64-w64-mingw32-
+    CCFLAGS_ARCH = -DECO_X86_64
+    ARCH_TARGET = amd64
+
+else ifeq ($(ARCH), x64)
+    TOOL = $(TOOLCHAIN)$(SLASH)eco-x86_64-w64-mingw32-gcc-13.2.0-$(HOST_OS)$(SLASH)bin$(SLASH)x86_64-w64-mingw32-
+    CCFLAGS_ARCH = -DECO_X86_64
+    ARCH_TARGET = amd64
+
+else ifeq ($(ARCH), rv32)
+    TOOL = $(TOOLCHAIN)$(SLASH)eco-riscv-none-elf-gcc-13.2.0-$(HOST_OS)$(SLASH)bin$(SLASH)riscv-none-elf-
+    CCFLAGS_ARCH = -DECO_RISCV_32
+    ARCH_TARGET = rv32
+
+else ifeq ($(ARCH), rv64)
+    TOOL = $(TOOLCHAIN)$(SLASH)eco-riscv-none-elf-gcc-13.2.0-$(HOST_OS)$(SLASH)bin$(SLASH)riscv-none-elf-
+    ARCH_TARGET = rv64gc
+    ifeq ($(DEVICE), D1)
+        # Allwinner D1 (T-Head C906 CPU) optimizations
+        CCFLAGS_ARCH = -march=rv64gc -mabi=lp64d -mcmodel=medany -mcpu=ant-906
+        LDS_SCRIPT = ..$(SLASH)..$(SLASH)..$(SLASH)SourceFiles$(SLASH)$(ARCH)$(SLASH)AllwinnerD1.lds
+        # Set flag for D1 post-processing
+        IS_D1 = 1
+    else
+        CCFLAGS_ARCH = -march=rv64gc -mabi=lp64 -mcmodel=medany
+        LDS_SCRIPT = ..$(SLASH)..$(SLASH)..$(SLASH)SourceFiles$(SLASH)$(ARCH)$(SLASH)Generic_RV64.lds
+    endif
+    CCFLAGS_ARCH += -DECO_RISCV_64
+
+else ifeq ($(ARCH), aarch32)
+    TOOL = $(TOOLCHAIN)$(SLASH)eco-arm-none-eabi-gcc-13.2.0-$(HOST_OS)$(SLASH)bin$(SLASH)arm-none-eabi-
+    ARCH_TARGET = armv7
+    ifeq ($(DEVICE), STM32F4)
+        CCFLAGS_ARCH = -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16
+        LDS_SCRIPT = ..$(SLASH)..$(SLASH)..$(SLASH)SourceFiles$(SLASH)$(ARCH)$(SLASH)STM32F407.lds
+    else
+        CCFLAGS_ARCH = -march=armv7-a -mthumb
+        LDS_SCRIPT = ..$(SLASH)..$(SLASH)..$(SLASH)SourceFiles$(SLASH)$(ARCH)$(SLASH)Generic_ARM.lds
+    endif
+    CCFLAGS_ARCH += -DECO_AARCH32
+
+else ifeq ($(ARCH), aarch64)
+    TOOL = $(TOOLCHAIN)$(SLASH)eco-aarch64-none-elf-gcc-13.2.0-$(HOST_OS)$(SLASH)bin$(SLASH)aarch64-none-elf-
+    CCFLAGS_ARCH = -mcpu=cortex-a53 -mlittle-endian -DECO_AARCH64
+    ARCH_TARGET = armv8
+    LDS_SCRIPT = ..$(SLASH)..$(SLASH)..$(SLASH)SourceFiles$(SLASH)$(ARCH)$(SLASH)Generic_A64.lds
+
+else ifeq ($(ARCH), avr)
+    TOOL = $(TOOLCHAIN)$(SLASH)eco-avr-none-elf-gcc-13.2.0-$(HOST_OS)$(SLASH)bin$(SLASH)avr-
+    CCFLAGS_ARCH = -mmcu=$(DEVICE) -DECO_AVR
+    ARCH_TARGET = avr
+else
+    $(error Unknown ARCH: $(ARCH). Please check your ARCH variable)
+endif
+
+# Device selection
+ifdef DEVICE
+    DEVICE_TARGET = $(DEVICE)$(SLASH)
+endif
+
+# --- Compilation Flags ---
+# Includes
+INC = -I "$(ECO_FRAMEWORK)$(SLASH)Eco.Core1$(SLASH)SharedFiles" \
+-I "$(ECO_FRAMEWORK)$(SLASH)Eco.InterfaceBus1$(SLASH)SharedFiles" \
+-I "$(ECO_FRAMEWORK)$(SLASH)Eco.MemoryManager1$(SLASH)SharedFiles" \
+-I "$(ECO_FRAMEWORK)$(SLASH)Eco.FileSystemManagement1$(SLASH)SharedFiles" \
+-I "$(ECO_FRAMEWORK)$(SLASH)Eco.System1$(SLASH)SharedFiles" \
+-I ..$(SLASH)..$(SLASH)..$(SLASH)SharedFiles$(SLASH) \
+-I ..$(SLASH)..$(SLASH)..$(SLASH)HeaderFiles$(SLASH) \
+-I ..$(SLASH)..$(SLASH)..$(SLASH)HeaderFiles$(SLASH)$(ARCH)
+
+# --- Linker Configuration ---
+LIB_DIR = -L "$(ECO_FRAMEWORK)$(SLASH)Eco.Core1$(SLASH)BuildFiles$(SLASH)$(PLATFORM)$(SLASH)$(ARCH_TARGET)$(SLASH)StaticRelease" \
+-L "$(ECO_FRAMEWORK)$(SLASH)Eco.InterfaceBus1$(SLASH)BuildFiles$(SLASH)$(PLATFORM)$(SLASH)$(ARCH_TARGET)$(SLASH)StaticRelease" \
+-L "$(ECO_FRAMEWORK)$(SLASH)Eco.MemoryManager1$(SLASH)BuildFiles$(SLASH)$(PLATFORM)$(SLASH)$(ARCH_TARGET)$(SLASH)StaticRelease" \
+-L "$(ECO_FRAMEWORK)$(SLASH)Eco.FileSystemManagement1$(SLASH)BuildFiles$(SLASH)$(PLATFORM)$(SLASH)$(ARCH_TARGET)$(SLASH)StaticRelease" \
+-L "$(ECO_FRAMEWORK)$(SLASH)Eco.System1$(SLASH)BuildFiles$(SLASH)$(PLATFORM)$(SLASH)$(ARCH_TARGET)$(SLASH)StaticRelease"\
+-L "..$(SLASH)..$(SLASH)..$(SLASH)BuildFiles$(SLASH)$(PLATFORM)$(SLASH)$(ARCH_TARGET)$(SLASH)$(CONFIG_TARGET)"
+
+# Source files.
+SRC = \
+..$(SLASH)..$(SLASH)..$(SLASH)UnitTestFiles$(SLASH)SourceFiles$(SLASH)EcoLab1.c
+
+# Libraries
+LIBS = 
+LIBS += -l011BF193DAAC48E0B83B3A8618D23C4C $(LIBS_TARGET) 
+
+# Object files
+OBJ = $(SRC:.c=.o)
+
+OUT = $(OUT_TARGET)
+OUT_DIR = ..$(SLASH)..$(SLASH)..$(SLASH)BuildFiles$(SLASH)$(PLATFORM)$(SLASH)$(ARCH_TARGET)$(SLASH)$(CONFIG_TARGET)
+
+# C/C++ compiler flags
+CCFLAGS = $(CCFLAGS_TARGET) $(CCFLAGS_ARCH)
+ 
+ # Compile flags
+LDFLAGS = $(LDFLAGS_TARGET) $(LDFLAGS_ARCH)
+
+# Tools
+CC = $(TOOL)gcc
+LD = $(TOOL)gcc
+AR = $(TOOL)gcc-ar
+OC = $(TOOL)objcopy
+
+.SUFFIXES: .c
+
+all:  $(OUT)
+
+.c.o:
+ifeq ($(OS), Windows_NT)
+	@if not exist "$(call FIX_PATH,$(OUT_DIR))" mkdir "$(call FIX_PATH,$(OUT_DIR))"
+else
+	@mkdir -p $(OUT_DIR)
+endif
+	$(CC) $(INC) $(CCFLAGS) -c $< -o $@
+
+$(OUT): $(OBJ)
+	$(LD) $(OBJ) $(LIB_DIR) $(LDFLAGS) -Wl,--start-group $(LIBS) -Wl,--end-group -o "$(OUT_DIR)$(SLASH)$(OUT)$(EXT)"
+	
+ifeq ($(ARCH), avr)
+	$(OC) -O ihex "$(OUT_DIR)$(SLASH)$(OUT)$(EXT)" "$(OUT_DIR)$(SLASH)$(OUT).hex"
+	$(TOOL)size "$(OUT_DIR)$(SLASH)$(OUT)$(EXT)"
+endif
+
+ifeq ($(ARCH), aarch32)
+	$(OC) -O binary "$(OUT_DIR)$(SLASH)$(OUT)$(EXT)" "$(OUT_DIR)$(SLASH)$(OUT).bin"
+endif    
+	$(RM) $(call FIX_PATH,$(OBJ))
+
+clean:
+	$(RM) $(call FIX_PATH,$(OBJ))
+	$(RM) $(call FIX_PATH,$(OUT_DIR)$(SLASH)$(OUT).exe)
+

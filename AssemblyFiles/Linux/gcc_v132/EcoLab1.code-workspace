@@ -1,0 +1,185 @@
+{
+  "folders": [
+    {
+      "path": ".",
+      "name": "AssemblyFiles"
+    },
+    {
+      "path": "../../../BuildFiles",
+      "name": "BuildFiles"
+    },
+    {
+      "path": "../../../DependenciesFiles"
+    },
+    {
+      "path": "../../../DesignFiles"
+    },
+    {
+      "path": "../../../HeaderFiles"
+    },
+    {
+      "path": "../../../SharedFiles"
+    },
+    {
+      "path": "../../../SourceFiles"
+    },
+    {
+      "path": "../../../UnitTestFiles"
+    }
+  ],
+  "settings": {
+    "C_Cpp.default.configurationProvider": "ms-vscode.makefile-tools",
+    "C_Cpp.default.cStandard": "c89",
+    "C_Cpp.default.includePath": [
+      "${workspaceFolder}/**",
+      "**/../../HeaderFiles",
+      "**/../../SharedFiles",
+      "$(ECO_FRAMEWORK)/Eco.Core1/SharedFiles",
+      "$(ECO_FRAMEWORK)/Eco.InterfaceBus1/SharedFiles",
+      "$(ECO_FRAMEWORK)/Eco.MemoryManager1/SharedFiles",
+      "$(ECO_FRAMEWORK)/Eco.FileSystemManagement1/SharedFiles",
+      "$(ECO_FRAMEWORK)/Eco.System1/SharedFiles"
+    ]
+  },
+  "makefile.configurations": [
+    {
+      "name": "EcoLab1 Static|x86_32 Debug",
+      "makeArgs": [
+        "-f",
+        "Makefile",
+        "TARGET=1",
+        "ARCH=x86_32",
+        "DEBUG=1"
+      ]
+    },
+    {
+      "name": "EcoLab1 Static|x86_32 Release",
+      "makeArgs": [
+        "-f",
+        "Makefile",
+        "TARGET=1",
+        "ARCH=x86_32",
+        "DEBUG=0"
+      ]
+    },
+    {
+      "name": "EcoLab1 Static|x86_64 Debug",
+      "makeArgs": [
+        "-f",
+        "Makefile",
+        "TARGET=1",
+        "ARCH=x86_64",
+        "DEBUG=1"
+      ]
+    },
+    {
+      "name": "EcoLab1 Static|x86_64 Release",
+      "makeArgs": [
+        "-f",
+        "Makefile",
+        "TARGET=1",
+        "ARCH=x86_64",
+        "DEBUG=0"
+      ]
+    },
+    {
+      "name": "EcoLab1 Dynamic|x86_32 Debug",
+      "makeArgs": [
+        "-f",
+        "Makefile",
+        "TARGET=0",
+        "ARCH=x86_32",
+        "DEBUG=1"
+      ]
+    },
+    {
+      "name": "EcoLab1 Dynamic|x86_32 Release",
+      "makeArgs": [
+        "-f",
+        "Makefile",
+        "TARGET=0",
+        "ARCH=x86_32",
+        "DEBUG=0"
+      ]
+    },
+    {
+      "name": "EcoLab1 Dynamic|x86_64 Debug",
+      "makeArgs": [
+        "-f",
+        "Makefile",
+        "TARGET=0",
+        "ARCH=x86_64",
+        "DEBUG=1"
+      ]
+    },
+    {
+      "name": "EcoLab1 Dynamic|x86_64 Release",
+      "makeArgs": [
+        "-f",
+        "Makefile",
+        "TARGET=0",
+        "ARCH=x86_64",
+        "DEBUG=0"
+      ]
+    },
+    {
+      "name": "EcoLab1UnitTest Static|x86_32 Debug",
+      "makeArgs": [
+        "-f",
+        "MakefileExe",
+        "TARGET=1",
+        "ARCH=x86_32",
+        "DEBUG=1"
+      ]
+    },
+    {
+      "name": "EcoLab1UnitTest Static|x86_64 Debug",
+      "makeArgs": [
+        "-f",
+        "MakefileExe",
+        "TARGET=1",
+        "ARCH=x86_64",
+        "DEBUG=1"
+      ]
+    },
+    {
+      "name": "EcoLab1UnitTest Dynamic|x86_32 Debug",
+      "makeArgs": [
+        "-f",
+        "MakefileExe",
+        "TARGET=0",
+        "ARCH=x86_32",
+        "DEBUG=1"
+      ]
+    },
+    {
+      "name": "EcoLab1UnitTest Dynamic|x86_64 Debug",
+      "makeArgs": [
+        "-f",
+        "MakefileExe",
+        "TARGET=0",
+        "ARCH=x86_64",
+        "DEBUG=1"
+      ]
+    }
+  ],
+  "tasks": {
+    "version": "2.0.0",
+    "tasks": [
+      {
+        "label": "build all configurations",
+        "type": "shell",
+        "command": "make",
+        "args": [
+          "-f",
+          "Makefile"
+        ],
+        "group": {
+          "kind": "build",
+          "isDefault": true
+        },
+        "problemMatcher": []
+      }
+    ]
+  }
+}
