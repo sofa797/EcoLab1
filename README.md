@@ -1,4 +1,4 @@
-# EcoLab1 — нахождение корней полинома (`roots`), задание 43
+# EcoLab1. нахождение корней полинома (`roots`), задание 43
 
 Три компонента технологии **АОМК (ACOM / Eco OS)** на языке C находят все (в том числе комплексные) корни полинома
 `p(x) = c₀·xⁿ + c₁·xⁿ⁻¹ + … + cₙ` — аналог функции `roots` в MATLAB. Стандартная библиотека C (libc) и динамическая
@@ -14,15 +14,15 @@
 Клиент выбирает алгоритм, загружая компонент с шины по его CID (константа `ALGORITHM_CHOICE`).
 
 ## Сборка и запуск
-**Вариант 1 — Xcode.** Откройте `EcoLab1.xcodeproj`, схема **Static** → Build (⌘B). Затем `EcoLab1UnitTest.xcodeproj`,
+**Вариант 1 - Xcode.** Откройте `EcoLab1.xcodeproj`, схема **Static** → Build (⌘B). Затем `EcoLab1UnitTest.xcodeproj`,
 схема **Static** → Run (⌘R).
 
-**Вариант 2 — терминал / VS Code** (из корня проекта):
+**Вариант 2 - терминал / VS Code** (из корня проекта):
 ```bash
 make info    # проверить, что найдены библиотеки Eco (если нет: make ECO_FRAMEWORK=/путь/к/Eco)
 make run     # собрать и запустить тесты
 ```
-В VS Code: ⌘⇧B — сборка, Terminal → Run Task → **Run tests** — запуск.
+В VS Code: Command (Ctrl) + Shift + B - сборка, Terminal → Run Task → **Run tests** — запуск.
 
 Ожидаемый результат — в конце вывода:
 ```
