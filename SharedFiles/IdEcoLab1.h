@@ -1,38 +1,42 @@
+﻿/*
+ * <character encoding>
+ *   Cyrillic (UTF-8 with signature) - Codepage 65001
+ * </character encoding>
+ *
+ * <summary>
+ *   IdEcoLab1
+ * </summary>
+ *
+ * <description>
+ *   This header describes the interface IdEcoLab1
+ * </description>
+ *
+ * <reference>
+ *
+ * </reference>
+ *
+ * <author>
+ *   Copyright (c) 2026 . All rights reserved.
+ * </author>
+ *
+ */
+
 #ifndef __ID_ECOLAB1_H__
 #define __ID_ECOLAB1_H__
 
 #include "IEcoBase1.h"
-#include "IEcoLab1.h"
+#include "IEcoPolynomialMath.h"
 
-/* CID Durand-Kerner  = {11111111-AAAA-BBBB-CCCC-000000000001} */
-#ifndef __CID_EcoLab1_DK
-static const UGUID CID_EcoLab1_DK = {0x01, 0x10,
-    {0x11,0x11,0x11,0x11,0xAA,0xAA,0xBB,0xBB,
-     0xCC,0xCC,0x00,0x00,0x00,0x00,0x00,0x01}};
-#endif
+/* EcoLab1 CID = {011BF193-DAAC-48E0-B83B-3A8618D23C4C} */
+#ifndef __CID_EcoLab1
+static const UGUID CID_EcoLab1 = {0x01, 0x10, {0x01, 0x1B, 0xF1, 0x93, 0xDA, 0xAC, 0x48, 0xE0, 0xB8, 0x3B, 0x3A, 0x86, 0x18, 0xD2, 0x3C, 0x4C}};
+#endif /* __CID_EcoLab1 */
 
-/* CID Aberth-Ehrlich = {22222222-AAAA-BBBB-CCCC-000000000002} */
-#ifndef __CID_EcoLab1_AE
-static const UGUID CID_EcoLab1_AE = {0x01, 0x10,
-    {0x22,0x22,0x22,0x22,0xAA,0xAA,0xBB,0xBB,
-     0xCC,0xCC,0x00,0x00,0x00,0x00,0x00,0x02}};
-#endif
-
-/* CID Laguerre       = {33333333-AAAA-BBBB-CCCC-000000000003} */
-#ifndef __CID_EcoLab1_Laguerre
-static const UGUID CID_EcoLab1_Laguerre = {0x01, 0x10,
-    {0x33,0x33,0x33,0x33,0xAA,0xAA,0xBB,0xBB,
-     0xCC,0xCC,0x00,0x00,0x00,0x00,0x00,0x03}};
-#endif
-
+/* Component factory for dynamic and static layout */
 #ifdef ECO_DLL
-ECO_EXPORT IEcoComponentFactory ECOCALLMETHOD GetIEcoComponentFactoryPtr_DK(void);
-ECO_EXPORT IEcoComponentFactory ECOCALLMETHOD GetIEcoComponentFactoryPtr_AE(void);
-ECO_EXPORT IEcoComponentFactory ECOCALLMETHOD GetIEcoComponentFactoryPtr_Laguerre(void);
+ECO_EXPORT IEcoComponentFactory* ECOCALLMETHOD GetIEcoComponentFactoryPtr();
 #elif ECO_LIB
-extern IEcoComponentFactory* GetIEcoComponentFactoryPtr_11111111AAAABBBBCCCC000000000001;
-extern IEcoComponentFactory* GetIEcoComponentFactoryPtr_22222222AAAABBBBCCCC000000000002;
-extern IEcoComponentFactory* GetIEcoComponentFactoryPtr_33333333AAAABBBBCCCC000000000003;
+extern IEcoComponentFactory* GetIEcoComponentFactoryPtr_011BF193DAAC48E0B83B3A8618D23C4C;
 #endif
 
-#endif
+#endif /* __ID_ECOLAB1_H__ */
