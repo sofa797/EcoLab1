@@ -25,3 +25,5 @@ UserInterfaceState.xcuserstate
 *.tmp
 
 # DependenciesFiles/
+python/out/
+tools/stress/hrand
