@@ -14,8 +14,8 @@
 Клиент выбирает алгоритм, загружая компонент с шины по его CID (константа `ALGORITHM_CHOICE`).
 
 ## Сборка и запуск
-**Вариант 1 - Xcode.** Откройте `EcoLab1.xcodeproj`, схема **Static** → Build (⌘B). Затем `EcoLab1UnitTest.xcodeproj`,
-схема **Static** → Run (⌘R).
+**Вариант 1 - Xcode.** Откройте `EcoLab1.xcodeproj`, схема **Static** → Build. Затем `EcoLab1UnitTest.xcodeproj`,
+схема **Static** → Run.
 
 **Вариант 2 - терминал / VS Code** (из корня проекта):
 ```bash
