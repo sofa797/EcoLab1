@@ -1,4 +1,4 @@
-﻿/*
+/*
  * <character encoding>
  *   Cyrillic (UTF-8 with signature) - Codepage 65001
  * </character encoding>
@@ -10,6 +10,8 @@
  * <description>
  *   This source code describes the implementation of the interfaces for CEcoLab1_18D23C4C
  *   Task 43: roots of a polynomial. Algorithm: Durand-Kerner method.
+ *   Lab 2: the component can be AGGREGATED by an outer component (non-delegating IEcoUnknown) and
+ *   itself uses calculator components (IEcoCalculatorX / IEcoCalculatorY) by INCLUSION and AGGREGATION.
  *   No libc functions are used (see EcoPolyCommon.h).
  * </description>
  *
@@ -25,6 +27,11 @@
 #include "IEcoInterfaceBus1MemExt.h"
 #include "CEcoLab1.h"
 #include "EcoPolyCommon.h"
+#include "IdEcoCalculatorA.h"
+#include "IdEcoCalculatorB.h"
+#include "IdEcoCalculatorC.h"
+#include "IdEcoCalculatorD.h"
+#include "IdEcoCalculatorE.h"
 
 /* ===================================================================== */
 /*  Algorithm core: Durand-Kerner method                                              */
@@ -86,33 +93,159 @@ static int16_t EcoPolyDK_Core(const long double* c, uint32_t n, EcoComplexL* z) 
 }
 
 
+
+/* ===================================================================== */
+/*  Locating the object from an interface pointer                         */
+/* ===================================================================== */
+/* The function tables are the first members of the object (see CEcoLab1.h), the pointers are of one size */
+#define ECOLAB1_FROM_INONDELEGATING(me) ((CEcoLab1_18D23C4C*)((char*)(me) - 1 * sizeof(void*)))
+#define ECOLAB1_FROM_IX(me)             ((CEcoLab1_18D23C4C*)((char*)(me) - 2 * sizeof(void*)))
+#define ECOLAB1_FROM_IY(me)             ((CEcoLab1_18D23C4C*)((char*)(me) - 3 * sizeof(void*)))
+#define ECOLAB1_FROM_ISCHEME(me)        ((CEcoLab1_18D23C4C*)((char*)(me) - 4 * sizeof(void*)))
+
+/* AddRef of the CONTROLLING unknown: the reference is counted by the outer component when aggregated */
+#define ECOLAB1_ADDREF_OUTER(pCMe)  ((pCMe)->m_pIUnkOuter->pVTbl->AddRef((pCMe)->m_pIUnkOuter))
+
+/* ===================================================================== */
+/*  Connecting the calculator components (inclusion / aggregation)       */
+/* ===================================================================== */
+
+/* Release everything that was connected (inclusion pointers and the aggregated component) */
+static void EcoLab1_Disconnect(CEcoLab1_18D23C4C* pCMe) {
+    if (pCMe->m_pIncX != 0) {
+        pCMe->m_pIncX->pVTbl->Release(pCMe->m_pIncX);
+        pCMe->m_pIncX = 0;
+    }
+    if (pCMe->m_pIncY != 0) {
+        pCMe->m_pIncY->pVTbl->Release(pCMe->m_pIncY);
+        pCMe->m_pIncY = 0;
+    }
+    if (pCMe->m_pAggUnk != 0) {
+        /* non-delegating Release of the aggregated component: this is the reference we own */
+        pCMe->m_pAggUnk->pVTbl->Release(pCMe->m_pAggUnk);
+        pCMe->m_pAggUnk = 0;
+    }
+    pCMe->m_Scheme = 0;
+}
+
+/* Connect the calculators of the given scheme (see IEcoLab1Scheme.h) */
+static int16_t EcoLab1_Connect(CEcoLab1_18D23C4C* pCMe, int16_t scheme) {
+    IEcoInterfaceBus1* pIBus = 0;
+    int16_t result = ERR_ECO_POINTER;
+
+    if (pCMe->m_pISys == 0) {
+        return result;
+    }
+    result = pCMe->m_pISys->pVTbl->QueryInterface(pCMe->m_pISys, &IID_IEcoInterfaceBus1, (void**)&pIBus);
+    if (result != 0 || pIBus == 0) {
+        return ERR_ECO_NOBUS;
+    }
+
+    switch (scheme) {
+    case ECOLAB1_SCHEME_FIG1_A_D:
+        /* Fig.1, inclusion: X <- A, Y <- D (D includes A itself) */
+        result = pIBus->pVTbl->QueryComponent(pIBus, &CID_EcoCalculatorA, 0, &IID_IEcoCalculatorX, (void**)&pCMe->m_pIncX);
+        if (result == 0) {
+            result = pIBus->pVTbl->QueryComponent(pIBus, &CID_EcoCalculatorD, 0, &IID_IEcoCalculatorY, (void**)&pCMe->m_pIncY);
+        }
+        break;
+    case ECOLAB1_SCHEME_FIG1_B_E:
+        /* Fig.1, inclusion: X <- B (included, not aggregated), Y <- E (E aggregates its own B) */
+        result = pIBus->pVTbl->QueryComponent(pIBus, &CID_EcoCalculatorB, 0, &IID_IEcoCalculatorX, (void**)&pCMe->m_pIncX);
+        if (result == 0) {
+            result = pIBus->pVTbl->QueryComponent(pIBus, &CID_EcoCalculatorE, 0, &IID_IEcoCalculatorY, (void**)&pCMe->m_pIncY);
+        }
+        break;
+    case ECOLAB1_SCHEME_FIG2_B_E:
+    case ECOLAB1_SCHEME_FIG2_B_D:
+        /* Fig.2, AGGREGATION of B: the outer unknown is passed, IID_IEcoUnknown is requested */
+        result = pIBus->pVTbl->QueryComponent(pIBus, &CID_EcoCalculatorB, pCMe->m_pIUnkOuter, &IID_IEcoUnknown, (void**)&pCMe->m_pAggUnk);
+        if (result == 0) {
+            /* ... and inclusion of E or D for IEcoCalculatorY */
+            result = pIBus->pVTbl->QueryComponent(pIBus,
+                        (scheme == ECOLAB1_SCHEME_FIG2_B_E) ? &CID_EcoCalculatorE : &CID_EcoCalculatorD,
+                        0, &IID_IEcoCalculatorY, (void**)&pCMe->m_pIncY);
+        }
+        break;
+    case ECOLAB1_SCHEME_C:
+        /* inclusion of C: both interfaces of one component (two references to one object) */
+        result = pIBus->pVTbl->QueryComponent(pIBus, &CID_EcoCalculatorC, 0, &IID_IEcoCalculatorX, (void**)&pCMe->m_pIncX);
+        if (result == 0) {
+            result = pIBus->pVTbl->QueryComponent(pIBus, &CID_EcoCalculatorC, 0, &IID_IEcoCalculatorY, (void**)&pCMe->m_pIncY);
+        }
+        break;
+    default:
+        result = ERR_ECO_POINTER;
+        break;
+    }
+
+    pIBus->pVTbl->Release(pIBus);
+
+    if (result != 0) {
+        /* partially connected - undo (the calculators are optional for the component) */
+        EcoLab1_Disconnect(pCMe);
+        return result;
+    }
+    pCMe->m_Scheme = scheme;
+    return ERR_ECO_SUCCESS;
+}
+
+/* ===================================================================== */
+/*  Non-delegating IEcoUnknown (the real implementation of QI / counting) */
+/* ===================================================================== */
+
 /*
- *
  * <summary>
- *   QueryInterface Function
+ *   NondelegatingQueryInterface Function
  * </summary>
  *
  * <description>
- *   QueryInterface function for the IEcoPolynomialMath interface
+ *   The real QueryInterface of the component. All delegating QueryInterface functions of all the
+ *   interfaces end up here (directly or through the outer component).
  * </description>
- *
  */
-static int16_t ECOCALLMETHOD CEcoLab1_18D23C4C_QueryInterface(/* in */ IEcoPolynomialMathPtr_t me, /* in */ const UGUID* riid, /* out */ void** ppv) {
-    CEcoLab1_18D23C4C* pCMe = (CEcoLab1_18D23C4C*)me;
+static int16_t ECOCALLMETHOD CEcoLab1_18D23C4C_NondelegatingQueryInterface(/* in */ IEcoUnknownPtr_t me, /* in */ const UGUID* riid, /* out */ void** ppv) {
+    CEcoLab1_18D23C4C* pCMe = 0;
 
     /* Pointer Validation */
     if (me == 0 || ppv == 0) {
         return ERR_ECO_POINTER;
     }
+    pCMe = ECOLAB1_FROM_INONDELEGATING(me);
 
-    /* Validate and retrieve requested interface */
     if ( IsEqualUGUID(riid, &IID_IEcoPolynomialMath) ) {
         *ppv = &pCMe->m_pVTblIEcoPolynomialMath;
-        pCMe->m_pVTblIEcoPolynomialMath->AddRef((IEcoPolynomialMath*)pCMe);
+        ECOLAB1_ADDREF_OUTER(pCMe);
     }
     else if ( IsEqualUGUID(riid, &IID_IEcoUnknown) ) {
-        *ppv = &pCMe->m_pVTblIEcoPolynomialMath;
-        pCMe->m_pVTblIEcoPolynomialMath->AddRef((IEcoPolynomialMath*)pCMe);
+        /* the identity of the component: always the non-delegating IEcoUnknown */
+        *ppv = &pCMe->m_pVTblINondelegatingUnk;
+        ++pCMe->m_cRef;
+    }
+    else if ( IsEqualUGUID(riid, &IID_IEcoLab1Scheme) ) {
+        *ppv = &pCMe->m_pVTblIScheme;
+        ECOLAB1_ADDREF_OUTER(pCMe);
+    }
+    else if ( IsEqualUGUID(riid, &IID_IEcoCalculatorX) ) {
+        if (pCMe->m_pAggUnk != 0) {
+            /* AGGREGATION: the pointer of the inner component goes directly to the client */
+            return pCMe->m_pAggUnk->pVTbl->QueryInterface(pCMe->m_pAggUnk, riid, ppv);
+        }
+        if (pCMe->m_pIncX == 0) {
+            *ppv = 0;
+            return ERR_ECO_NOINTERFACE;
+        }
+        /* INCLUSION: our own interface that forwards the calls to the included component */
+        *ppv = &pCMe->m_pVTblIX;
+        ECOLAB1_ADDREF_OUTER(pCMe);
+    }
+    else if ( IsEqualUGUID(riid, &IID_IEcoCalculatorY) ) {
+        if (pCMe->m_pIncY == 0) {
+            *ppv = 0;
+            return ERR_ECO_NOINTERFACE;
+        }
+        *ppv = &pCMe->m_pVTblIY;
+        ECOLAB1_ADDREF_OUTER(pCMe);
     }
     else {
         *ppv = 0;
@@ -121,56 +254,61 @@ static int16_t ECOCALLMETHOD CEcoLab1_18D23C4C_QueryInterface(/* in */ IEcoPolyn
     return ERR_ECO_SUCCESS;
 }
 
-/*
- *
- * <summary>
- *   AddRef Function
- * </summary>
- *
- * <description>
- *   AddRef function for the IEcoPolynomialMath interface
- * </description>
- *
- */
-static uint32_t ECOCALLMETHOD CEcoLab1_18D23C4C_AddRef(/* in */ IEcoPolynomialMathPtr_t me) {
-    CEcoLab1_18D23C4C* pCMe = (CEcoLab1_18D23C4C*)me;
+static uint32_t ECOCALLMETHOD CEcoLab1_18D23C4C_NondelegatingAddRef(/* in */ IEcoUnknownPtr_t me) {
+    CEcoLab1_18D23C4C* pCMe = 0;
 
-    /* Pointer Validation */
-    if (me == 0 ) {
+    if (me == 0) {
         return -1; /* ERR_ECO_POINTER */
     }
-
+    pCMe = ECOLAB1_FROM_INONDELEGATING(me);
     return ++pCMe->m_cRef;
 }
 
-/*
- *
- * <summary>
- *   Release Function
- * </summary>
- *
- * <description>
- *   Release function for the IEcoPolynomialMath interface
- * </description>
- *
- */
-static uint32_t ECOCALLMETHOD CEcoLab1_18D23C4C_Release(/* in */ IEcoPolynomialMathPtr_t me) {
-    CEcoLab1_18D23C4C* pCMe = (CEcoLab1_18D23C4C*)me;
+static uint32_t ECOCALLMETHOD CEcoLab1_18D23C4C_NondelegatingRelease(/* in */ IEcoUnknownPtr_t me) {
+    CEcoLab1_18D23C4C* pCMe = 0;
 
-    /* Pointer Validation */
-    if (me == 0 ) {
+    if (me == 0) {
         return -1; /* ERR_ECO_POINTER */
     }
+    pCMe = ECOLAB1_FROM_INONDELEGATING(me);
 
-    /* Decrementing the component's reference count */
     --pCMe->m_cRef;
-    /* If the count is zero, free the instance data */
     if ( pCMe->m_cRef == 0 ) {
         pCMe->Delete(pCMe);
-
         return 0;
     }
     return pCMe->m_cRef;
+}
+
+/* ===================================================================== */
+/*  IEcoPolynomialMath (delegating IEcoUnknown)                          */
+/* ===================================================================== */
+
+static int16_t ECOCALLMETHOD CEcoLab1_18D23C4C_QueryInterface(/* in */ IEcoPolynomialMathPtr_t me, /* in */ const UGUID* riid, /* out */ void** ppv) {
+    CEcoLab1_18D23C4C* pCMe = (CEcoLab1_18D23C4C*)me;
+
+    if (me == 0 || ppv == 0) {
+        return ERR_ECO_POINTER;
+    }
+    return pCMe->m_pIUnkOuter->pVTbl->QueryInterface(pCMe->m_pIUnkOuter, riid, ppv);
+}
+
+static uint32_t ECOCALLMETHOD CEcoLab1_18D23C4C_AddRef(/* in */ IEcoPolynomialMathPtr_t me) {
+    CEcoLab1_18D23C4C* pCMe = (CEcoLab1_18D23C4C*)me;
+
+    if (me == 0 ) {
+        return -1; /* ERR_ECO_POINTER */
+    }
+    return pCMe->m_pIUnkOuter->pVTbl->AddRef(pCMe->m_pIUnkOuter);
+}
+
+static uint32_t ECOCALLMETHOD CEcoLab1_18D23C4C_Release(/* in */ IEcoPolynomialMathPtr_t me) {
+    CEcoLab1_18D23C4C* pCMe = (CEcoLab1_18D23C4C*)me;
+
+    if (me == 0 ) {
+        return -1; /* ERR_ECO_POINTER */
+    }
+    return pCMe->m_pIUnkOuter->pVTbl->Release(pCMe->m_pIUnkOuter);
 }
 
 /*
@@ -207,6 +345,166 @@ static int16_t ECOCALLMETHOD CEcoLab1_18D23C4C_rootsl(/* in */ IEcoPolynomialMat
     return EcoPoly_RootsL(EcoPolyDK_Core, coeffs, num_coeffs, out_roots, out_count);
 }
 
+/* ===================================================================== */
+/*  IEcoCalculatorX - INCLUSION: the calls are forwarded to the included  */
+/*  component                                                              */
+/* ===================================================================== */
+
+static int16_t ECOCALLMETHOD CEcoLab1_18D23C4C_IX_QueryInterface(/* in */ IEcoCalculatorXPtr_t me, /* in */ const UGUID* riid, /* out */ voidptr_t* ppv) {
+    CEcoLab1_18D23C4C* pCMe = 0;
+
+    if (me == 0 || ppv == 0) {
+        return ERR_ECO_POINTER;
+    }
+    pCMe = ECOLAB1_FROM_IX(me);
+    return pCMe->m_pIUnkOuter->pVTbl->QueryInterface(pCMe->m_pIUnkOuter, riid, ppv);
+}
+
+static uint32_t ECOCALLMETHOD CEcoLab1_18D23C4C_IX_AddRef(/* in */ IEcoCalculatorXPtr_t me) {
+    if (me == 0) {
+        return -1; /* ERR_ECO_POINTER */
+    }
+    return ECOLAB1_FROM_IX(me)->m_pIUnkOuter->pVTbl->AddRef(ECOLAB1_FROM_IX(me)->m_pIUnkOuter);
+}
+
+static uint32_t ECOCALLMETHOD CEcoLab1_18D23C4C_IX_Release(/* in */ IEcoCalculatorXPtr_t me) {
+    if (me == 0) {
+        return -1; /* ERR_ECO_POINTER */
+    }
+    return ECOLAB1_FROM_IX(me)->m_pIUnkOuter->pVTbl->Release(ECOLAB1_FROM_IX(me)->m_pIUnkOuter);
+}
+
+static int32_t ECOCALLMETHOD CEcoLab1_18D23C4C_Addition(/* in */ IEcoCalculatorXPtr_t me, /* in */ int16_t a, /* in */ int16_t b) {
+    CEcoLab1_18D23C4C* pCMe = 0;
+
+    if (me == 0) {
+        return -1; /* ERR_ECO_POINTER */
+    }
+    pCMe = ECOLAB1_FROM_IX(me);
+    if (pCMe->m_pIncX == 0) {
+        return 0;
+    }
+    return pCMe->m_pIncX->pVTbl->Addition(pCMe->m_pIncX, a, b);
+}
+
+static int16_t ECOCALLMETHOD CEcoLab1_18D23C4C_Subtraction(/* in */ IEcoCalculatorXPtr_t me, /* in */ int16_t a, /* in */ int16_t b) {
+    CEcoLab1_18D23C4C* pCMe = 0;
+
+    if (me == 0) {
+        return -1; /* ERR_ECO_POINTER */
+    }
+    pCMe = ECOLAB1_FROM_IX(me);
+    if (pCMe->m_pIncX == 0) {
+        return 0;
+    }
+    return pCMe->m_pIncX->pVTbl->Subtraction(pCMe->m_pIncX, a, b);
+}
+
+/* ===================================================================== */
+/*  IEcoCalculatorY - INCLUSION                                          */
+/* ===================================================================== */
+
+static int16_t ECOCALLMETHOD CEcoLab1_18D23C4C_IY_QueryInterface(/* in */ IEcoCalculatorYPtr_t me, /* in */ const UGUID* riid, /* out */ voidptr_t* ppv) {
+    CEcoLab1_18D23C4C* pCMe = 0;
+
+    if (me == 0 || ppv == 0) {
+        return ERR_ECO_POINTER;
+    }
+    pCMe = ECOLAB1_FROM_IY(me);
+    return pCMe->m_pIUnkOuter->pVTbl->QueryInterface(pCMe->m_pIUnkOuter, riid, ppv);
+}
+
+static uint32_t ECOCALLMETHOD CEcoLab1_18D23C4C_IY_AddRef(/* in */ IEcoCalculatorYPtr_t me) {
+    if (me == 0) {
+        return -1; /* ERR_ECO_POINTER */
+    }
+    return ECOLAB1_FROM_IY(me)->m_pIUnkOuter->pVTbl->AddRef(ECOLAB1_FROM_IY(me)->m_pIUnkOuter);
+}
+
+static uint32_t ECOCALLMETHOD CEcoLab1_18D23C4C_IY_Release(/* in */ IEcoCalculatorYPtr_t me) {
+    if (me == 0) {
+        return -1; /* ERR_ECO_POINTER */
+    }
+    return ECOLAB1_FROM_IY(me)->m_pIUnkOuter->pVTbl->Release(ECOLAB1_FROM_IY(me)->m_pIUnkOuter);
+}
+
+static int32_t ECOCALLMETHOD CEcoLab1_18D23C4C_Multiplication(/* in */ IEcoCalculatorYPtr_t me, /* in */ int16_t a, /* in */ int16_t b) {
+    CEcoLab1_18D23C4C* pCMe = 0;
+
+    if (me == 0) {
+        return -1; /* ERR_ECO_POINTER */
+    }
+    pCMe = ECOLAB1_FROM_IY(me);
+    if (pCMe->m_pIncY == 0) {
+        return 0;
+    }
+    return pCMe->m_pIncY->pVTbl->Multiplication(pCMe->m_pIncY, a, b);
+}
+
+static int16_t ECOCALLMETHOD CEcoLab1_18D23C4C_Division(/* in */ IEcoCalculatorYPtr_t me, /* in */ int16_t a, /* in */ int16_t b) {
+    CEcoLab1_18D23C4C* pCMe = 0;
+
+    if (me == 0) {
+        return -1; /* ERR_ECO_POINTER */
+    }
+    pCMe = ECOLAB1_FROM_IY(me);
+    if (pCMe->m_pIncY == 0 || b == 0) {
+        return 0;
+    }
+    return pCMe->m_pIncY->pVTbl->Division(pCMe->m_pIncY, a, b);
+}
+
+/* ===================================================================== */
+/*  IEcoLab1Scheme                                                       */
+/* ===================================================================== */
+
+static int16_t ECOCALLMETHOD CEcoLab1_18D23C4C_IScheme_QueryInterface(/* in */ IEcoLab1SchemePtr_t me, /* in */ const UGUID* riid, /* out */ voidptr_t* ppv) {
+    CEcoLab1_18D23C4C* pCMe = 0;
+
+    if (me == 0 || ppv == 0) {
+        return ERR_ECO_POINTER;
+    }
+    pCMe = ECOLAB1_FROM_ISCHEME(me);
+    return pCMe->m_pIUnkOuter->pVTbl->QueryInterface(pCMe->m_pIUnkOuter, riid, ppv);
+}
+
+static uint32_t ECOCALLMETHOD CEcoLab1_18D23C4C_IScheme_AddRef(/* in */ IEcoLab1SchemePtr_t me) {
+    if (me == 0) {
+        return -1; /* ERR_ECO_POINTER */
+    }
+    return ECOLAB1_FROM_ISCHEME(me)->m_pIUnkOuter->pVTbl->AddRef(ECOLAB1_FROM_ISCHEME(me)->m_pIUnkOuter);
+}
+
+static uint32_t ECOCALLMETHOD CEcoLab1_18D23C4C_IScheme_Release(/* in */ IEcoLab1SchemePtr_t me) {
+    if (me == 0) {
+        return -1; /* ERR_ECO_POINTER */
+    }
+    return ECOLAB1_FROM_ISCHEME(me)->m_pIUnkOuter->pVTbl->Release(ECOLAB1_FROM_ISCHEME(me)->m_pIUnkOuter);
+}
+
+/*
+ * SelectScheme: disconnects the current calculators and connects the ones of the new scheme.
+ * Call it BEFORE the client takes IEcoCalculatorX / IEcoCalculatorY pointers: pointers of an
+ * aggregated component taken earlier would stay without their owner.
+ */
+static int16_t ECOCALLMETHOD CEcoLab1_18D23C4C_SelectScheme(/* in */ IEcoLab1SchemePtr_t me, /* in */ int16_t scheme) {
+    CEcoLab1_18D23C4C* pCMe = 0;
+
+    if (me == 0) {
+        return ERR_ECO_POINTER;
+    }
+    pCMe = ECOLAB1_FROM_ISCHEME(me);
+    EcoLab1_Disconnect(pCMe);
+    return EcoLab1_Connect(pCMe, scheme);
+}
+
+static int16_t ECOCALLMETHOD CEcoLab1_18D23C4C_get_Scheme(/* in */ IEcoLab1SchemePtr_t me) {
+    if (me == 0) {
+        return -1;
+    }
+    return ECOLAB1_FROM_ISCHEME(me)->m_Scheme;
+}
+
 /*
  *
  * <summary>
@@ -214,7 +512,9 @@ static int16_t ECOCALLMETHOD CEcoLab1_18D23C4C_rootsl(/* in */ IEcoPolynomialMat
  * </summary>
  *
  * <description>
- *   Instance initialization function
+ *   Instance initialization function. Connects the calculators of the default scheme
+ *   (the calculators are optional: if they are not registered on the bus the component still
+ *   works as a polynomial solver).
  * </description>
  *
  */
@@ -254,6 +554,11 @@ static int16_t ECOCALLMETHOD initCEcoLab1_18D23C4C(/*in*/ CEcoLab1_18D23C4CPtr_t
     /* Freeing */
     pIBus->pVTbl->Release(pIBus);
 
+    /* Lab 2: connecting the calculators of the default scheme (an error is not fatal) */
+    if (result == 0) {
+        EcoLab1_Connect(pCMe, ECOLAB1_SCHEME_DEFAULT);
+    }
+
     return result;
 }
 
@@ -264,7 +569,8 @@ static int16_t ECOCALLMETHOD initCEcoLab1_18D23C4C(/*in*/ CEcoLab1_18D23C4CPtr_t
  * </summary>
  *
  * <description>
- *   Instance creation function
+ *   Instance creation function. Stores the controlling (delegating) IEcoUnknown: the outer
+ *   component if the component is aggregated, otherwise its own non-delegating IEcoUnknown.
  * </description>
  *
  */
@@ -274,6 +580,15 @@ static int16_t ECOCALLMETHOD createCEcoLab1_18D23C4C(/* in */ CEcoLab1_18D23C4CP
     /* Pointer Validation */
     if (pCMe == 0) {
         return result; /* ERR_ECO_POINTER */
+    }
+
+    if (pIUnkOuter != 0) {
+        /* aggregation: the reference counting and QueryInterface are delegated to the outer component */
+        pCMe->m_pIUnkOuter = pIUnkOuter;
+    }
+    else {
+        /* not aggregated: the non-delegating IEcoUnknown is used */
+        pCMe->m_pIUnkOuter = (IEcoUnknown*)&pCMe->m_pVTblINondelegatingUnk;
     }
 
     return ERR_ECO_SUCCESS;
@@ -295,6 +610,8 @@ static void ECOCALLMETHOD deleteCEcoLab1_18D23C4C(/* in */ CEcoLab1_18D23C4CPtr_
 
     if (pCMe != 0 ) {
         pIMem = pCMe->m_pIMem;
+        /* Freeing the included / aggregated calculators */
+        EcoLab1_Disconnect(pCMe);
         /* Freeing */
         if ( pCMe->m_pISys != 0 ) {
             pCMe->m_pISys->pVTbl->Release(pCMe->m_pISys);
@@ -314,14 +631,57 @@ IEcoPolynomialMathVTbl g_xFDF2ECDE99324C0AAEDF2125217B6AE3VTbl_18D23C4C = {
     CEcoLab1_18D23C4C_rootsl
 };
 
-/* Object Instance */
+/* Non-delegating IEcoUnknown Virtual Table */
+IEcoUnknownVTbl g_x000000000000000000000000000000AAVTbl_18D23C4C = {
+    CEcoLab1_18D23C4C_NondelegatingQueryInterface,
+    CEcoLab1_18D23C4C_NondelegatingAddRef,
+    CEcoLab1_18D23C4C_NondelegatingRelease
+};
+
+/* IEcoCalculatorX Virtual Table (inclusion) */
+IEcoCalculatorXVTbl g_x9322111622484742AE0682819447843DVTbl_18D23C4C = {
+    CEcoLab1_18D23C4C_IX_QueryInterface,
+    CEcoLab1_18D23C4C_IX_AddRef,
+    CEcoLab1_18D23C4C_IX_Release,
+    CEcoLab1_18D23C4C_Addition,
+    CEcoLab1_18D23C4C_Subtraction
+};
+
+/* IEcoCalculatorY Virtual Table (inclusion) */
+IEcoCalculatorYVTbl g_xBD6414C29096423EA90C04D77AFD1CADVTbl_18D23C4C = {
+    CEcoLab1_18D23C4C_IY_QueryInterface,
+    CEcoLab1_18D23C4C_IY_AddRef,
+    CEcoLab1_18D23C4C_IY_Release,
+    CEcoLab1_18D23C4C_Multiplication,
+    CEcoLab1_18D23C4C_Division
+};
+
+/* IEcoLab1Scheme Virtual Table */
+IEcoLab1SchemeVTbl g_x6E1B9D304F274C85A3D90B72E5C8A1F4VTbl_18D23C4C = {
+    CEcoLab1_18D23C4C_IScheme_QueryInterface,
+    CEcoLab1_18D23C4C_IScheme_AddRef,
+    CEcoLab1_18D23C4C_IScheme_Release,
+    CEcoLab1_18D23C4C_SelectScheme,
+    CEcoLab1_18D23C4C_get_Scheme
+};
+
+/* Object Instance (prototype that the factory copies) */
 CEcoLab1_18D23C4C g_xCEcoLab1_18D23C4C = {
     &g_xFDF2ECDE99324C0AAEDF2125217B6AE3VTbl_18D23C4C,
+    &g_x000000000000000000000000000000AAVTbl_18D23C4C,
+    &g_x9322111622484742AE0682819447843DVTbl_18D23C4C,
+    &g_xBD6414C29096423EA90C04D77AFD1CADVTbl_18D23C4C,
+    &g_x6E1B9D304F274C85A3D90B72E5C8A1F4VTbl_18D23C4C,
 
     initCEcoLab1_18D23C4C,
     createCEcoLab1_18D23C4C,
     deleteCEcoLab1_18D23C4C,
     1, /* m_cRef */
     0, /* m_pIMem */
-    0  /* m_pISys */
+    0, /* m_pISys */
+    0, /* m_pIUnkOuter */
+    0, /* m_Scheme */
+    0, /* m_pIncX */
+    0, /* m_pIncY */
+    0  /* m_pAggUnk */
 };

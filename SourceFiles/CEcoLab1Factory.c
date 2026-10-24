@@ -178,7 +178,7 @@ static int16_t ECOCALLMETHOD CEcoLab1_18D23C4CFactory_Alloc(/* in */ struct IEco
     }
 
     /* Getting the memory allocator interface */
-    pIBus->pVTbl->QueryComponent(pIBus, rcid, 0, &IID_IEcoMemoryAllocator1, (void**) &pIMem);
+    result = pIBus->pVTbl->QueryComponent(pIBus, rcid, 0, &IID_IEcoMemoryAllocator1, (void**) &pIMem);
     /* Check */
     if (result != 0 || pIMem == 0) {
         /* Freeing in case of an error */
@@ -205,8 +205,10 @@ static int16_t ECOCALLMETHOD CEcoLab1_18D23C4CFactory_Alloc(/* in */ struct IEco
     /* Component initialization */
     result = pCObj->Init(pCObj, pISystem);
 
-    /* Getting a pointer to the interface */
-    pIUnk = (IEcoUnknown*)pCObj;
+    /* Getting a pointer to the interface.
+     * Lab 2: the NON-DELEGATING IEcoUnknown (the 2nd table pointer of the object) is used, because
+     * when the component is aggregated the delegating functions would go to the outer component. */
+    pIUnk = (IEcoUnknown*)&pCObj->m_pVTblINondelegatingUnk;
     result = pIUnk->pVTbl->QueryInterface(pIUnk, riid, ppv);
 
     /* Decrementing the reference requested by the Component Factory */

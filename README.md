@@ -1,4 +1,4 @@
-# EcoLab1 — нахождение корней полинома (`roots`), задание 43
+# EcoLab1. нахождение корней полинома (`roots`), задание 43
 
 Три компонента технологии **АОМК (ACOM / Eco OS)** на языке C находят все (в том числе комплексные) корни полинома
 `p(x) = c₀·xⁿ + c₁·xⁿ⁻¹ + … + cₙ` — аналог функции `roots` в MATLAB. Стандартная библиотека C (libc) и динамическая
@@ -14,15 +14,15 @@
 Клиент выбирает алгоритм, загружая компонент с шины по его CID (константа `ALGORITHM_CHOICE`).
 
 ## Сборка и запуск
-**Вариант 1 — Xcode.** Откройте `EcoLab1.xcodeproj`, схема **Static** → Build (⌘B). Затем `EcoLab1UnitTest.xcodeproj`,
-схема **Static** → Run (⌘R).
+**Вариант 1 - Xcode.** Откройте `EcoLab1.xcodeproj`, схема **Static** → Build. Затем `EcoLab1UnitTest.xcodeproj`,
+схема **Static** → Run.
 
-**Вариант 2 — терминал / VS Code** (из корня проекта):
+**Вариант 2 - терминал / VS Code** (из корня проекта):
 ```bash
 make info    # проверить, что найдены библиотеки Eco (если нет: make ECO_FRAMEWORK=/путь/к/Eco)
 make run     # собрать и запустить тесты
 ```
-В VS Code: ⌘⇧B — сборка, Terminal → Run Task → **Run tests** — запуск.
+В VS Code: Command (Ctrl) + Shift + B - сборка, Terminal → Run Task → **Run tests** — запуск.
 
 Ожидаемый результат — в конце вывода:
 ```
@@ -100,3 +100,27 @@ int16_t code = pAlg->pVTbl->roots(pAlg, c, 3, r, &n);   /* r = {2, 1}, n = 2 */
 | `SharedFiles` | Публичные заголовки интерфейсов и идентификаторов, доступные клиентам | `IEcoPolynomialMath.h` (общий интерфейс), `IdEcoLab1.h`, `IdEcoPolyAberth.h`, `IdEcoPolyLaguerre.h`, `IEcoLab1.h` |
 | `SourceFiles` | Основной исходный код | `CEcoLab1.c`, `CEcoPolyAberth.c`, `CEcoPolyLaguerre.c` и их фабрики `CEco*Factory.c` |
 | `UnitTestFiles` | Модульные и интеграционные тесты, скрипты автоматического тестирования | `SourceFiles/EcoLab1.c` — консольный клиент: unit-тесты, сравнение алгоритмов, вывод данных для графиков |
+
+---
+
+# Лабораторная работа 2: включение и агрегирование (калькуляторы A–E, EcoLab1, EcoLab2)
+
+Все компоненты собираются в ту же статическую библиотеку и регистрируются клиентом на шине.
+
+| Компонент | Интерфейсы | Приём | CID |
+|---|---|---|---|
+| `EcoCalculatorA` | X (+, −) | — | `4828F655-2E45-40E7-8121-EBD220DC360E` |
+| `EcoCalculatorB` | X (+, −) | можно агрегировать | `AE202E54-3CE5-4550-8996-03BD70C62565` |
+| `EcoCalculatorC` | X, Y (+, −, ×, ÷) | — | `A4D0E5C1-7B3F-4E2A-9C58-1F6B2D8E3A47` (в уроках совпадает с CID A, здесь свой — иначе A и C не могут быть в одной библиотеке) |
+| `EcoCalculatorD` | Y, X | включает A | `3A8E4467-7E82-475C-B4A3-719ED8397E61` |
+| `EcoCalculatorE` | Y, X | агрегирует B | `872FEF1D-E331-4B87-AD44-D1E7C232C2F0` |
+| `EcoLab1` (Дюран–Кернер) | IEcoLab1 (= IEcoPolynomialMath), X, Y, IEcoLab1Scheme | можно агрегировать; включает/агрегирует калькуляторы (5 схем) | `011BF193-DAAC-48E0-B83B-3A8618D23C4C` |
+| `EcoLab2` | IEcoLab2, X, Y, IEcoPolynomialMath | включает E(+B), D(+A), C; агрегирует EcoLab1 | `2C8F6E4B-1D93-4A57-B0E6-5A7C93D1F482` |
+
+Схемы подключения калькуляторов к `EcoLab1` (выбираются через `IEcoLab1Scheme::SelectScheme`):
+1 — Рис.1: X ← A, Y ← D; 2 — Рис.1: X ← B, Y ← E; 3 — Рис.2: X ← B (агрегирование), Y ← E (включение), схема по
+умолчанию; 4 — Рис.2: X ← B (агрегирование), Y ← D; 5 — X и Y ← C.
+
+Клиент (`UnitTestFiles/SourceFiles/EcoLab1.c`) проверяет: каждый из A–E отдельно, 5 схем EcoLab1, свойства
+интерфейсов (QueryInterface через любой указатель на любой другой, одинаковый IEcoUnknown), EcoLab2.
+Ожидаемый результат: `TOTAL: 127 of 127 tests passed` (98 из лабы 1 + 29 новых).
